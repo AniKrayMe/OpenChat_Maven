@@ -103,6 +103,7 @@ public class ClientHandler {
                 }
                 catch (RuntimeException e) {
                     System.out.println(e.getMessage());
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
