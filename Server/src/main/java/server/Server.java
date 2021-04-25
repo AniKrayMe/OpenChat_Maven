@@ -1,5 +1,8 @@
 package server;
 
+import sql.DBAuthService;
+import sql.SQLHandler;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,7 +19,11 @@ public class Server {
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        authService = new SimpleAuthService();
+//        authService = new SimpleAuthService();
+        if (!SQLHandler.connect()){
+            throw new RuntimeException("Не удалось полключится к БД");
+        }
+        authService = new DBAuthService();
 
         try {
             server = new ServerSocket(PORT);
@@ -32,6 +39,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            SQLHandler.disconnect();
             try {
                 socket.close();
             } catch (IOException e) {

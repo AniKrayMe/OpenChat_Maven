@@ -1,5 +1,6 @@
 package server;
 
+import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -24,13 +25,12 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-                    socket.setSoTimeout(5000);
+                    socket.setSoTimeout(120000);
 
                     // цикл аутентификации
                     while (true) {
 
                         String str = in.readUTF();
-
                         if (str.equals("/end")) {
                             out.writeUTF("/end");
                             throw new RuntimeException("клиент отключился");
@@ -93,13 +93,36 @@ public class ClientHandler {
                             server.broadcastMsg(this, str);
                         }
 
+
+                        if (str.startsWith("/chnick ")) {
+                            String[] token = str.split("\\s+", 2);
+                            if (token.length < 2) {
+                                continue;
+                            }
+                            if (token[1].contains(" ")) {
+                                sendMsg("Ник не может содержать пробелов");
+                                continue;
+                            }
+                            if (server.getAuthService().changeNick(this.nickname, token[1])) {
+                                sendMsg("/yournickis " + token[1]);
+                                sendMsg("Ваш ник изменен на " + token[1]);
+                                this.nickname = token[1];
+                                server.broadcastClientList();
+                            } else {
+                                sendMsg("Не удалось изменить ник. Ник " + token[1] + " уже существует");
+                            }
+                        }
+
+
+
+
+
+
+
+
                     }
                 }catch (SocketTimeoutException e){
-                    try {
-                        out.writeUTF("/end");
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
+                    sendMsg("/end");
                 }
                 catch (RuntimeException e) {
                     System.out.println(e.getMessage());
